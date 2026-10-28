@@ -4,6 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from .catalog import PLAYING_STYLES, SKILL_LEVELS
+
 PHONE_ALLOWED = re.compile(r"^\+?[\d\s().-]+$")
 
 
@@ -13,6 +15,17 @@ def normalize_phone(value: str) -> str:
     if not PHONE_ALLOWED.match(value) or not 10 <= len(digits) <= 15:
         raise ValueError("phone must contain 10-15 digits")
     return ("+" if value.startswith("+") else "") + digits
+
+
+class SearchQuery(BaseModel):
+    max_price: float = Field(gt=0, le=2000, description="Shopper's budget in USD.")
+    skill_level: Literal[SKILL_LEVELS]
+    playing_style: Literal[PLAYING_STYLES] | None = None
+
+
+class InventoryQuery(BaseModel):
+    product_id: str
+    store_id: str
 
 
 class AppointmentRequest(BaseModel):

@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# Tool configs with your tunnel URL / secret IDs filled in
+elevenlabs/local/
+
 # Python
 .venv/
 __pycache__/

@@ -1,0 +1,27 @@
+{
+  "type": "webhook",
+  "name": "check_inventory",
+  "description": "Check live stock for one racket at one store. This is the ONLY source of truth for availability. If the racket is out of stock, the response lists other stores that have it.",
+  "api_schema": {
+    "url": "https://YOUR-PUBLIC-BACKEND-URL/api/agent-tools/check_inventory",
+    "method": "POST",
+    "request_headers": {
+      "X-Agent-Tools-Secret": { "secret_id": "REPLACE_WITH_YOUR_SECRET_ID" }
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": ["product_id", "store_id"],
+      "properties": {
+        "product_id": {
+          "type": "string",
+          "description": "The racket id exactly as returned by search_rackets, e.g. sc-98."
+        },
+        "store_id": {
+          "type": "string",
+          "enum": ["sf-mission", "oak-rockridge", "sj-willow-glen"],
+          "description": "Store to check: sf-mission (San Francisco, Mission District), oak-rockridge (Oakland, Rockridge), sj-willow-glen (San Jose, Willow Glen)."
+        }
+      }
+    }
+  }
+}

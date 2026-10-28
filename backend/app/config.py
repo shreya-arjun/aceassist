@@ -14,6 +14,7 @@ class Settings:
     frontend_origin: str
     elevenlabs_api_key: str | None
     elevenlabs_agent_id: str | None
+    agent_tools_secret: str | None = None
 
     @property
     def voice_configured(self) -> bool:
@@ -26,4 +27,5 @@ def load_settings() -> Settings:
         frontend_origin=os.getenv("FRONTEND_ORIGIN", "http://localhost:5173"),
         elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY") or None,
         elevenlabs_agent_id=os.getenv("ELEVENLABS_AGENT_ID") or None,
+        agent_tools_secret=os.getenv("AGENT_TOOLS_SECRET") or None,
     )

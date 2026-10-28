@@ -5,14 +5,14 @@ tool: flat parameters in, small structured JSON out.
 """
 
 import sqlite3
-from typing import Literal
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
 from . import catalog
 from .db import get_conn
 from .errors import ApiError
-from .schemas import AppointmentRequest, CallbackRequest
+from .schemas import AppointmentRequest, CallbackRequest, SearchQuery
 
 router = APIRouter(prefix="/api")
 
@@ -46,11 +46,8 @@ def list_stores():
 
 
 @router.get("/products/search")
-def search_products(
-    max_price: float = Query(gt=0, le=2000, description="Shopper's budget in USD."),
-    skill_level: Literal[catalog.SKILL_LEVELS] = Query(),
-    playing_style: Literal[catalog.PLAYING_STYLES] | None = Query(None),
-):
+def search_products(query: Annotated[SearchQuery, Query()]):
+    max_price, skill_level, playing_style = query.max_price, query.skill_level, query.playing_style
     results = catalog.search_products(max_price, skill_level, playing_style)
     response = {
         "query": {"max_price": max_price, "skill_level": skill_level, "playing_style": playing_style},

@@ -33,7 +33,8 @@ async function request(method, path, { params, body } = {}) {
   } catch {
     data = { error: { code: "network_error", message: "Can't reach the AceAssist backend. Is it running on :8000?" } };
   }
-  onCall({ method, url, body, status, data, at: new Date() });
+  const logged = data?.token ? { ...data, token: "[redacted]" } : data;
+  onCall({ method, url, body, status, data: logged, at: new Date() });
   if (status < 200 || status >= 300) throw new ApiError(status, data?.error);
   return data;
 }
@@ -46,4 +47,5 @@ export const api = {
   bookAppointment: (body) => request("POST", "/api/appointments", { body }),
   requestCallback: (body) => request("POST", "/api/callbacks", { body }),
   voiceStatus: () => request("GET", "/api/voice/status"),
+  conversationToken: () => request("GET", "/api/voice/conversation-token"),
 };

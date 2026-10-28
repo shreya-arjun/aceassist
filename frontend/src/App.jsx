@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { api, setCallListener } from "./api.js";
 import RecommendStep from "./steps/RecommendStep.jsx";
 import InventoryStep from "./steps/InventoryStep.jsx";
 import AppointmentStep from "./steps/AppointmentStep.jsx";
 import CallbackStep from "./steps/CallbackStep.jsx";
 import ApiLog from "./ApiLog.jsx";
-import VoicePanel from "./voice/VoicePanel.jsx";
+
+// The voice SDK is large; load it separately so the manual demo stays light.
+const VoicePanel = lazy(() => import("./voice/VoicePanel.jsx"));
 
 export default function App() {
   const [stores, setStores] = useState([]);
@@ -35,7 +37,9 @@ export default function App() {
       </header>
 
       <main>
-        <VoicePanel />
+        <Suspense fallback={<section className="voice"><p className="muted">Loading voice assistant…</p></section>}>
+          <VoicePanel />
+        </Suspense>
         <RecommendStep selected={product} onSelect={setProduct} onEscalate={escalate} />
         <InventoryStep product={product} stores={stores} storeId={storeId} onStoreChange={setStoreId} />
         <AppointmentStep product={product} stores={stores} storeId={storeId} onEscalate={escalate} />

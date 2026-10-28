@@ -28,6 +28,23 @@ section, .log {
 }
 h2 { margin: 0 0 12px; font-size: 1.05rem; }
 .voice { border-style: dashed; }
+.voice .row { align-items: center; }
+button:disabled { opacity: 0.6; cursor: default; }
+.pill { padding: 3px 10px; border-radius: 999px; font-size: 0.8rem; background: #eef1ec; }
+.pill-connected { background: #e6f4e6; color: #2f6b2f; }
+.pill-connecting { background: #fff7e0; }
+.pill-error { background: #fdecec; color: #b23b3b; }
+.transcript {
+  margin-top: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #eef1ec;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+.line { padding: 3px 0; }
+.line-tool, .line-system { color: #6b786d; font-size: 0.8rem; font-style: italic; }
 
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: end; }

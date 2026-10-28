@@ -1,0 +1,35 @@
+{
+  "type": "webhook",
+  "name": "request_callback",
+  "description": "Log a request for a store associate to call the shopper back. Use when you can't answer a question from tool data, a tool keeps failing, or the shopper asks for a person.",
+  "api_schema": {
+    "url": "https://YOUR-PUBLIC-BACKEND-URL/api/agent-tools/request_callback",
+    "method": "POST",
+    "request_headers": {
+      "X-Agent-Tools-Secret": { "secret_id": "REPLACE_WITH_YOUR_SECRET_ID" }
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": ["customer_name", "phone", "reason"],
+      "properties": {
+        "customer_name": {
+          "type": "string",
+          "description": "Shopper's name."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Shopper's phone number with 10-15 digits."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Short summary of what the shopper needs help with."
+        },
+        "store_id": {
+          "type": "string",
+          "enum": ["sf-mission", "oak-rockridge", "sj-willow-glen"],
+          "description": "Preferred store, if the shopper mentioned one."
+        }
+      }
+    }
+  }
+}

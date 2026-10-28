@@ -18,8 +18,19 @@ class ApiError(Exception):
         self.details = details or {}
 
 
+def error_dict(code: str, message: str, details) -> dict:
+    return {"code": code, "message": message, "details": details}
+
+
 def _body(code: str, message: str, details) -> dict:
-    return {"error": {"code": code, "message": message, "details": details}}
+    return {"error": error_dict(code, message, details)}
+
+
+def validation_fields(errors: list[dict]) -> list[dict]:
+    return [
+        {"field": ".".join(str(p) for p in err["loc"] if p not in ("body", "query", "path")), "issue": err["msg"]}
+        for err in errors
+    ]
 
 
 def register_error_handlers(app: FastAPI) -> None:
@@ -29,11 +40,8 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(_: Request, exc: RequestValidationError):
-        fields = [
-            {"field": ".".join(str(p) for p in err["loc"] if p not in ("body", "query", "path")), "issue": err["msg"]}
-            for err in exc.errors()
-        ]
         return JSONResponse(
             status_code=422,
-            content=_body("validation_error", "Some fields are missing or invalid.", {"fields": fields}),
+            content=_body("validation_error", "Some fields are missing or invalid.",
+                          {"fields": validation_fields(exc.errors())}),
         )

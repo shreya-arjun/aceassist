@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import shop, voice
+from . import agent_tools, shop, voice
 from .config import Settings, load_settings
 from .db import init_db
 from .errors import register_error_handlers
@@ -22,6 +22,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_error_handlers(app)
     app.include_router(shop.router)
     app.include_router(voice.router)
+    app.include_router(agent_tools.router)
 
     @app.get("/api/health")
     def health():

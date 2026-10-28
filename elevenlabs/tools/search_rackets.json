@@ -1,0 +1,32 @@
+{
+  "type": "webhook",
+  "name": "search_rackets",
+  "description": "Find tennis rackets from the Baseline Tennis catalog that fit the shopper's budget and skill level, ranked with their preferred playing style first. Returns product details only; it does NOT say whether anything is in stock. Call this before recommending any racket.",
+  "api_schema": {
+    "url": "https://YOUR-PUBLIC-BACKEND-URL/api/agent-tools/search_rackets",
+    "method": "POST",
+    "request_headers": {
+      "X-Agent-Tools-Secret": { "secret_id": "REPLACE_WITH_YOUR_SECRET_ID" }
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": ["max_price", "skill_level"],
+      "properties": {
+        "max_price": {
+          "type": "number",
+          "description": "The shopper's maximum budget in US dollars, e.g. 150."
+        },
+        "skill_level": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced"],
+          "description": "The shopper's tennis experience level."
+        },
+        "playing_style": {
+          "type": "string",
+          "enum": ["power", "control", "all-court", "spin"],
+          "description": "Preferred playing style. Omit if the shopper has no preference."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "type": "webhook",
+  "name": "book_appointment",
+  "description": "Request a racket demo or restringing appointment. Two steps: first call with confirmed=false; the response returns error code confirmation_required with details.summary. Read that summary to the shopper word for word. Only after they clearly say yes, call again with identical details and confirmed=true. A demo also requires the racket to be in stock at that store.",
+  "api_schema": {
+    "url": "https://YOUR-PUBLIC-BACKEND-URL/api/agent-tools/book_appointment",
+    "method": "POST",
+    "request_headers": {
+      "X-Agent-Tools-Secret": { "secret_id": "REPLACE_WITH_YOUR_SECRET_ID" }
+    },
+    "request_body_schema": {
+      "type": "object",
+      "required": ["service_type", "store_id", "customer_name", "phone", "preferred_time", "confirmed"],
+      "properties": {
+        "service_type": {
+          "type": "string",
+          "enum": ["demo", "restring"],
+          "description": "demo = try a racket in store; restring = restringing service."
+        },
+        "store_id": {
+          "type": "string",
+          "enum": ["sf-mission", "oak-rockridge", "sj-willow-glen"],
+          "description": "Store for the appointment."
+        },
+        "product_id": {
+          "type": "string",
+          "description": "Racket id from search_rackets. Required for demos; omit for restringing unless the shopper names a catalog racket."
+        },
+        "customer_name": {
+          "type": "string",
+          "description": "Shopper's name as they gave it."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Shopper's phone number with 10-15 digits, e.g. 415-555-0134."
+        },
+        "preferred_time": {
+          "type": "string",
+          "description": "Requested local store time in ISO 8601 without a timezone, e.g. 2026-11-07T15:00. Must be in the future."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional extra details, e.g. string type or tension."
+        },
+        "confirmed": {
+          "type": "boolean",
+          "description": "false on the first call. true ONLY after the shopper explicitly confirmed the summary you read back."
+        }
+      }
+    }
+  }
+}
