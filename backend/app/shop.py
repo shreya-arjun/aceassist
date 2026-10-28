@@ -45,17 +45,52 @@ def list_stores():
     return {"stores": list(catalog.STORES.values())}
 
 
+# Search deliberately returns no stock info so nothing downstream can imply
+# availability without calling the inventory endpoint.
+AVAILABILITY_NOTE = "Stock is not included. Check inventory per store before saying a racket is available."
+
+
+def _with_product_id(products: list[dict]) -> list[dict]:
+    """Expose the canonical id under the same name check_inventory/book_appointment take."""
+    return [{"product_id": p["id"], **p} for p in products]
+
+
+def _lookup_by_name(name: str) -> dict:
+    matches = catalog.find_products_by_name(name)
+    response = {
+        "mode": "lookup",
+        "query": {"product_name": name},
+        "count": len(matches),
+        "results": _with_product_id(matches),
+        "availability_note": AVAILABILITY_NOTE,
+    }
+    if len(matches) == 1:
+        response["match_status"] = "found"
+    elif matches:
+        response["match_status"] = "ambiguous"
+        response["message"] = (f"'{name}' matches {len(matches)} rackets: "
+                               f"{', '.join(p['name'] for p in matches)}. Ask the shopper which one they mean.")
+    else:
+        response["match_status"] = "not_found"
+        response["message"] = (f"No racket named '{name}' is in the Baseline Tennis catalog. "
+                               "Don't describe it; offer a recommendation or a callback instead.")
+        response["catalog"] = [{"product_id": p["id"], "name": p["name"]} for p in catalog.PRODUCTS]
+    return response
+
+
 @router.get("/products/search")
 def search_products(query: Annotated[SearchQuery, Query()]):
+    if query.product_name:
+        return _lookup_by_name(query.product_name)
+
     max_price, skill_level, playing_style = query.max_price, query.skill_level, query.playing_style
     results = catalog.search_products(max_price, skill_level, playing_style)
     response = {
+        "mode": "recommendation",
         "query": {"max_price": max_price, "skill_level": skill_level, "playing_style": playing_style},
         "count": len(results),
-        "results": results,
-        # Search deliberately returns no stock info so nothing downstream can
-        # imply availability without calling the inventory endpoint.
-        "availability_note": "Stock is not included. Check inventory per store before saying a racket is available.",
+        "results": _with_product_id(results),
+        "availability_note": AVAILABILITY_NOTE,
     }
     if not results:
         cheapest = min((p for p in catalog.PRODUCTS if skill_level in p["skill_levels"]), key=lambda p: p["price"])

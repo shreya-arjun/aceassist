@@ -4,6 +4,8 @@ Inventory lives here (not in SQLite) because it stands in for a retailer's
 existing inventory system that we'd integrate with, not data we own.
 """
 
+import re
+
 STORES = {
     "sf-mission": {"id": "sf-mission", "name": "Baseline Tennis – Mission District", "city": "San Francisco"},
     "oak-rockridge": {"id": "oak-rockridge", "name": "Baseline Tennis – Rockridge", "city": "Oakland"},
@@ -107,6 +109,28 @@ def search_products(max_price: float, skill_level: str, playing_style: str | Non
     else:
         matches.sort(key=lambda p: p["price"])
     return matches
+
+
+def _compact(text: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", text.lower())
+
+
+def find_products_by_name(name: str) -> list[dict]:
+    """Match a spoken/typed racket name to catalog products.
+
+    An exact match on name, brand + name, or id wins outright. Otherwise every
+    word of the query must appear in the product's brand, name, or id
+    ("spin craft 98" -> SpinCraft 98). Multiple matches are returned as-is so
+    the caller can ask the shopper instead of guessing.
+    """
+    query = _compact(name)
+    if not query:
+        return []
+    exact = [p for p in PRODUCTS if query in (_compact(p["name"]), _compact(p["brand"] + p["name"]), _compact(p["id"]))]
+    if exact:
+        return exact
+    tokens = [_compact(t) for t in re.split(r"[\s\-_/]+", name) if _compact(t)]
+    return [p for p in PRODUCTS if all(t in _compact(p["brand"] + p["name"] + p["id"]) for t in tokens)]
 
 
 def units_on_hand(product_id: str, store_id: str) -> int:

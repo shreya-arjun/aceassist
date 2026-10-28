@@ -18,9 +18,23 @@ def normalize_phone(value: str) -> str:
 
 
 class SearchQuery(BaseModel):
-    max_price: float = Field(gt=0, le=2000, description="Shopper's budget in USD.")
-    skill_level: Literal[SKILL_LEVELS]
+    """Either a specific product lookup (product_name) or a recommendation (max_price + skill_level)."""
+
+    product_name: str | None = Field(None, max_length=80, description="A racket the shopper named, e.g. SpinCraft 98.")
+    max_price: float | None = Field(None, gt=0, le=2000, description="Shopper's budget in USD.")
+    skill_level: Literal[SKILL_LEVELS] | None = None
     playing_style: Literal[PLAYING_STYLES] | None = None
+
+    @field_validator("product_name")
+    @classmethod
+    def blank_name_is_none(cls, v: str | None) -> str | None:
+        return v.strip() or None if v else None
+
+    @model_validator(mode="after")
+    def needs_name_or_criteria(self):
+        if not self.product_name and (self.max_price is None or self.skill_level is None):
+            raise ValueError("Provide product_name, or both max_price and skill_level.")
+        return self
 
 
 class InventoryQuery(BaseModel):

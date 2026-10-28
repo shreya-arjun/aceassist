@@ -157,7 +157,11 @@ Demo script (shows each safeguard):
    for confirmation. Nothing is saved yet.
 4. "Yes." The second call uses `confirmed=true` and the booking is saved. Verify:
    `sqlite3 backend/aceassist.db "select * from appointments;"`
-5. "What string tension do pros use?" The tools don't know, so the agent should offer
+5. "Do you have the AllCourt Pro 100 in Oakland?"
+   The agent calls `search_rackets` with only `product_name`, then `check_inventory` with the
+   returned `product_id` (`ac-100`) and `oak-rockridge`: in stock. Asking for "the Velo one" should
+   get a follow-up question, because two Velo rackets match.
+6. "What string tension do pros use?" The tools don't know, so the agent should offer
    `request_callback` instead of inventing an answer.
 
 The transcript shows "Calling <tool>…" lines when ElevenLabs sends tool events to the client. If

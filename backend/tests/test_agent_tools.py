@@ -59,13 +59,60 @@ def test_search_tool_treats_empty_optional_as_missing(client):
     assert resp.json()["query"]["playing_style"] is None
 
 
-def test_search_tool_validation_error_is_200_with_fields(client):
-    resp = client.post("/api/agent-tools/search_rackets", json={"max_price": 150})
+@pytest.mark.parametrize("payload", [
+    {"max_price": 150},
+    {"skill_level": "beginner", "playing_style": "power"},
+    {"product_name": "", "max_price": None, "skill_level": ""},
+    {},
+])
+def test_search_tool_needs_name_or_budget_and_skill(client, payload):
+    resp = client.post("/api/agent-tools/search_rackets", json=payload)
     assert resp.status_code == 200
     data = resp.json()
     assert data["ok"] is False
     assert data["error"]["code"] == "validation_error"
-    assert [f["field"] for f in data["error"]["details"]["fields"]] == ["skill_level"]
+    assert "product_name, or both max_price and skill_level" in data["error"]["details"]["fields"][0]["issue"]
+
+
+def test_search_tool_lookup_by_name_ignores_blank_criteria(client):
+    resp = client.post("/api/agent-tools/search_rackets",
+                       json={"product_name": "spin craft 98", "max_price": "", "skill_level": None})
+    data = resp.json()
+    assert data["ok"] is True
+    assert data["mode"] == "lookup"
+    assert data["match_status"] == "found"
+    assert [p["product_id"] for p in data["results"]] == ["sc-98"]
+
+
+def test_search_tool_ambiguous_name_returns_candidates(client):
+    data = client.post("/api/agent-tools/search_rackets", json={"product_name": "Velo"}).json()
+    assert data["ok"] is True
+    assert data["match_status"] == "ambiguous"
+    assert {p["product_id"] for p in data["results"]} == {"pb-110", "sc-98"}
+    assert "Ask the shopper" in data["message"]
+
+
+def test_search_tool_unknown_name_does_not_guess(client):
+    data = client.post("/api/agent-tools/search_rackets", json={"product_name": "Babolat Pure Drive"}).json()
+    assert data["ok"] is True
+    assert data["match_status"] == "not_found"
+    assert data["results"] == []
+    assert {p["product_id"] for p in data["catalog"]} == {p["id"] for p in catalog.PRODUCTS}
+
+
+def test_looked_up_product_id_flows_into_inventory_and_booking(client, db_path):
+    found = client.post("/api/agent-tools/search_rackets", json={"product_name": "SpinCraft 98"}).json()
+    product_id = found["results"][0]["product_id"]
+
+    stock = client.post("/api/agent-tools/check_inventory",
+                        json={"product_id": product_id, "store_id": "oak-rockridge"}).json()
+    assert stock["ok"] is True and stock["in_stock"] is True and stock["product_id"] == product_id
+
+    booked = client.post("/api/agent-tools/book_appointment",
+                         json=booking(product_id=product_id, store_id="oak-rockridge", confirmed=True)).json()
+    assert booked["ok"] is True
+    with sqlite3.connect(db_path) as conn:
+        assert conn.execute("SELECT product_id, store_id FROM appointments").fetchone() == (product_id, "oak-rockridge")
 
 
 def test_inventory_tool_out_of_stock(client):

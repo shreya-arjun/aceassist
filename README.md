@@ -93,6 +93,7 @@ All errors look like `{"error": {"code": "...", "message": "...", "details": {..
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/api/stores` | Store list |
+| GET | `/api/products/search?product_name=` | Specific racket lookup: `match_status` is `found`, `ambiguous`, or `not_found` (no stock info) |
 | GET | `/api/products/search?max_price=&skill_level=&playing_style=` | Recommendations (no stock info) |
 | GET | `/api/products/{product_id}/inventory?store_id=` | Stock at one store, plus alternatives if out of stock |
 | POST | `/api/appointments` | Demo/restring request; needs `confirmed: true` |

@@ -1,7 +1,7 @@
 {
   "type": "webhook",
   "name": "search_rackets",
-  "description": "Find tennis rackets from the Baseline Tennis catalog that fit the shopper's budget and skill level, ranked with their preferred playing style first. Returns product details only; it does NOT say whether anything is in stock. Call this before recommending any racket.",
+  "description": "Look up rackets in the Baseline Tennis catalog. Two modes: (1) the shopper names a specific racket: send only product_name; (2) the shopper wants a recommendation: send max_price and skill_level, plus playing_style if known. Every result includes product_id; pass that exact value to check_inventory and book_appointment. In lookup mode check match_status: found = one racket; ambiguous = ask the shopper which of the results they mean; not_found = we don't carry it, so don't describe it. Returns product details only; it does NOT say whether anything is in stock.",
   "api_schema": {
     "url": "https://YOUR-PUBLIC-BACKEND-URL/api/agent-tools/search_rackets",
     "method": "POST",
@@ -10,21 +10,25 @@
     },
     "request_body_schema": {
       "type": "object",
-      "required": ["max_price", "skill_level"],
+      "required": [],
       "properties": {
+        "product_name": {
+          "type": "string",
+          "description": "Lookup mode: the racket name as the shopper said it, e.g. SpinCraft 98. Omit when asking for a recommendation."
+        },
         "max_price": {
           "type": "number",
-          "description": "The shopper's maximum budget in US dollars, e.g. 150."
+          "description": "Recommendation mode: the shopper's maximum budget in US dollars, e.g. 150. Required together with skill_level unless product_name is given."
         },
         "skill_level": {
           "type": "string",
           "enum": ["beginner", "intermediate", "advanced"],
-          "description": "The shopper's tennis experience level."
+          "description": "Recommendation mode: the shopper's tennis experience level. Required together with max_price unless product_name is given."
         },
         "playing_style": {
           "type": "string",
           "enum": ["power", "control", "all-court", "spin"],
-          "description": "Preferred playing style. Omit if the shopper has no preference."
+          "description": "Recommendation mode, optional: preferred playing style. Omit if the shopper has no preference."
         }
       }
     }

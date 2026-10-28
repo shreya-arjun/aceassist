@@ -48,6 +48,47 @@ def test_search_with_nothing_in_budget_suggests_cheapest(client):
     assert "SpinCraft 98" in resp.json()["suggestion"]
 
 
+def test_recommendation_results_include_canonical_product_id(client):
+    data = client.get("/api/products/search", params={"max_price": 300, "skill_level": "advanced"}).json()
+    assert data["mode"] == "recommendation"
+    assert all(p["product_id"] == p["id"] for p in data["results"])
+
+
+@pytest.mark.parametrize("name, expected_ids", [
+    ("SpinCraft 98", ["sc-98"]),
+    ("spincraft", ["sc-98"]),
+    ("Courtline AllCourt Pro 100", ["ac-100"]),
+    ("pc-95", ["pc-95"]),
+])
+def test_lookup_by_name_finds_one_product_without_budget_or_skill(client, name, expected_ids):
+    resp = client.get("/api/products/search", params={"product_name": name})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["mode"] == "lookup"
+    assert data["match_status"] == "found"
+    assert [p["product_id"] for p in data["results"]] == expected_ids
+    assert "in_stock" not in data["results"][0]
+
+
+def test_lookup_by_ambiguous_name_lists_candidates(client):
+    data = client.get("/api/products/search", params={"product_name": "100"}).json()
+    assert data["match_status"] == "ambiguous"
+    assert {p["product_id"] for p in data["results"]} == {"rk-100", "ac-100", "tp-100"}
+
+
+def test_lookup_by_unknown_name(client):
+    data = client.get("/api/products/search", params={"product_name": "Babolat Pure Drive"}).json()
+    assert data["match_status"] == "not_found"
+    assert data["count"] == 0
+    assert "Don't describe it" in data["message"]
+
+
+def test_search_requires_name_or_budget_and_skill(client):
+    resp = client.get("/api/products/search", params={"max_price": 150})
+    assert resp.status_code == 422
+    assert resp.json()["error"]["code"] == "validation_error"
+
+
 def test_search_rejects_unknown_skill_level(client):
     resp = client.get("/api/products/search", params={"max_price": 150, "skill_level": "pro"})
     assert resp.status_code == 422
