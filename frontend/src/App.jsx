@@ -5,6 +5,7 @@ import InventoryStep from "./steps/InventoryStep.jsx";
 import AppointmentStep from "./steps/AppointmentStep.jsx";
 import CallbackStep from "./steps/CallbackStep.jsx";
 import ApiLog from "./ApiLog.jsx";
+import VoiceErrorBoundary from "./voice/VoiceErrorBoundary.jsx";
 
 // The voice SDK is large; load it separately so the manual demo stays light.
 const VoicePanel = lazy(() => import("./voice/VoicePanel.jsx"));
@@ -37,9 +38,11 @@ export default function App() {
       </header>
 
       <main>
-        <Suspense fallback={<section className="voice"><p className="muted">Loading voice assistant…</p></section>}>
-          <VoicePanel />
-        </Suspense>
+        <VoiceErrorBoundary>
+          <Suspense fallback={<section className="voice"><p className="muted">Loading voice assistant…</p></section>}>
+            <VoicePanel />
+          </Suspense>
+        </VoiceErrorBoundary>
         <RecommendStep selected={product} onSelect={setProduct} onEscalate={escalate} />
         <InventoryStep product={product} stores={stores} storeId={storeId} onStoreChange={setStoreId} />
         <AppointmentStep product={product} stores={stores} storeId={storeId} onEscalate={escalate} />

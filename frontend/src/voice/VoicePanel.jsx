@@ -105,9 +105,13 @@ function VoiceAgent() {
 
 const LABELS = { user: "You", agent: "AceAssist", tool: "Tool", system: "" };
 
-function Transcript({ entries }) {
+export function Transcript({ entries }) {
   const end = useRef(null);
-  useEffect(() => end.current?.scrollIntoView?.({ block: "nearest" }), [entries]);
+  // Block body on purpose: newer browsers return a Promise from scrollIntoView,
+  // and React would treat any returned value as a cleanup function.
+  useEffect(() => {
+    end.current?.scrollIntoView?.({ block: "nearest" });
+  }, [entries]);
   if (entries.length === 0) return null;
   return (
     <div className="transcript" aria-live="polite">
